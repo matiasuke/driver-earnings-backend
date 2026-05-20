@@ -3,14 +3,21 @@ const path = require('path');
 
 // Inicializar Firebase Admin SDK
 if (!admin.apps.length) {
-  // Ruta al serviceAccountKey.json — por defecto busca en la carpeta backend/
-  const serviceAccountPath = path.resolve(
-    process.env.FIREBASE_SERVICE_ACCOUNT_PATH || './serviceAccountKey.json'
-  );
+  let credential;
 
-  admin.initializeApp({
-    credential: admin.credential.cert(require(serviceAccountPath)),
-  });
+  if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+    // En producción (Render): leer desde variable de entorno
+    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+    credential = admin.credential.cert(serviceAccount);
+  } else {
+    // En local: leer desde archivo
+    const serviceAccountPath = path.resolve(
+      process.env.FIREBASE_SERVICE_ACCOUNT_PATH || './serviceAccountKey.json'
+    );
+    credential = admin.credential.cert(require(serviceAccountPath));
+  }
+
+  admin.initializeApp({ credential });
 }
 
 const db = admin.firestore();
